@@ -17,6 +17,6 @@ random_votes = [random.randint(1, 3) for _ in range(1000)]
 df = pd.DataFrame(dict(User_ID=User_ID, x=X[:,0], y=X[:,1], Vote=random_votes))
 
 # save to csv file
-df.to_csv('VotingData.csv', index=False)
+df.to_csv('VotingSampleData.csv', index=False)
 
 print("CSV file named 'VotingData.csv' has been created.")

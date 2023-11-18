@@ -1,38 +1,53 @@
-# Import libraries
-from sklearn.cluster import KMeans
+# Import necessary libraries
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
-from matplotlib import pyplot as plt
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import MeanShift, estimate_bandwidth
+from collections import Counter
 
-# Load the data
-# Assume we have a CSV file 'data.csv' with columns 'population_density', 'mean_distance_to_food_center'
+# Load your CSV into a DataFrame
+csv_path = "VotingSampleData.csv" 
+df = pd.read_csv(csv_path)
+  
+# Assign columns to variables
+user_ids = df['userid']
+x_values = df['x']
+y_values = df['y']
+votes = df['vote']
 
-data = pd.read_csv('data.csv')
+# Create a list of tuples where each tuple is a pair of X,Y
+points = np.array(list(zip(x_values, y_values)))
 
-# Preprocess & normalize the data
-scaler = MinMaxScaler()
+# Estimate bandwidth for mean shift
+bandwidth = estimate_bandwidth(points, quantile=0.2, n_samples=500)
 
-scaler.fit(data[['mean_distance_to_food_center']])
-data['mean_distance_to_food_center'] = scaler.transform(data[['mean_distance_to_food_center']])
+# Create Mean Shift Model
+ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+ms.fit(points)
+labels = ms.labels_
+cluster_centers = ms.cluster_centers_
 
-scaler.fit(data[['population_density']])
-data['population_density'] = scaler.transform(data[['population_density']])
+df['clusterId'] = labels
 
-# Apply KMeans
-km = KMeans(n_clusters=3)  # Assume we want to create 3 clusters
-y_predicted = km.fit_predict(data[['mean_distance_to_food_center', 'population_density']])
+# If there are more than 5 clusters, combine the nearest ones
+while len(set(labels)) > 5:
+    # Calculate pairwise distances of cluster_centers, get the minimum
+    dists = np.sqrt(((cluster_centers[:, None, :] - cluster_centers) ** 2).sum(-1))
+    np.fill_diagonal(dists, np.inf)
+    min_cluster_pair = np.unravel_index(dists.argmin(), dists.shape)
 
-# Add the prediction to the data
-data['cluster'] = y_predicted
+    # Combine the two nearest clusters
+    labels[labels == min_cluster_pair[1]] = min_cluster_pair[0]
+    cluster_centers = np.delete(cluster_centers, min_cluster_pair[1], axis=0)
 
-# Visualize the clusters
-df1 = data[data.cluster==0]
-df2 = data[data.cluster==1]
-df3 = data[data.cluster==2]
+# Create scatter plot for visualization
+plt.scatter(x_values, y_values, c=labels)
+plt.show()
 
-plt.scatter(df1.mean_distance_to_food_center, df1.population_density, color='green')
-plt.scatter(df2.mean_distance_to_food_center, df2.population_density, color='red')
-plt.scatter(df3.mean_distance_to_food_center, df3.population_density, color='blue')
+# Create vote dictionary
+cluster_vote_dict = {}
+for cluster_id in set(labels):
+    cluster_votes = votes[labels == cluster_id]
+    cluster_vote_dict[cluster_id] = dict(Counter(cluster_votes))
 
-plt.scatter(km.cluster_centers_[:,0], km.cluster_centers_[:,1], color='purple', marker='*', label='centroid')
-plt.legend()
+print(cluster_vote_dict)
