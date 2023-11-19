@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.cluster import MeanShift, estimate_bandwidth
+from sklearn.cluster import MeanShift, estimate_bandwidth, KMeans
 from collections import Counter
 
 # import firebase_admin
@@ -13,15 +13,12 @@ from collections import Counter
 
 def readInData(csv_path):
     df = pd.read_csv(csv_path)
-    
-    
-    
     InactiveUsers = df[df['Vote'] == 0]
     active_users = df[df['Vote'] != 0]
     cluster_center = df[df['ClusterId'] == 0]
-    labels, cluster_centers = FindMeans(active_users)
-    all_labels, all_cluster_centers = FindMeans(df)
-    return df, InactiveUsers, active_users, labels, cluster_centers, all_labels, all_cluster_centers
+    labels, cluster_centers, num_centers = FindMeans(active_users)
+    all_labels, all_cluster_centers, unneeded = FindMeans(df)
+    return df, InactiveUsers, active_users, labels, cluster_centers, all_labels, all_cluster_centers, num_centers
 
 
 def FindMeans(df):  
@@ -31,7 +28,7 @@ def FindMeans(df):
     points = np.array(list(zip(x_values, y_values)))
 
     # Estimate bandwidth for mean shift
-    bandwidth = estimate_bandwidth(points, quantile=0.2, n_samples=500)
+    bandwidth = estimate_bandwidth(points, quantile=0.2, n_samples=100)
 
     # Create Mean Shift Model
     ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
@@ -50,10 +47,17 @@ def FindMeans(df):
         labels[labels == min_cluster_pair[1]] = min_cluster_pair[0]
         cluster_centers = np.delete(cluster_centers, min_cluster_pair[1], axis=0)
     
+    num_centers = len(set(labels))
+    km = KMeans(n_clusters=num_centers, init=cluster_centers, n_init=1)
+    km.fit(points)
+    labels = km.labels_
+    cluster_centers = km.cluster_centers_
     
     
-    
-    return labels, cluster_centers
+    if len(set(labels)) < 5:
+        for i in range(5 - len(set(labels))):
+            cluster_centers = np.append(cluster_centers, [[0,0]], axis=0)
+    return labels, cluster_centers, num_centers
 
 
 
@@ -90,7 +94,7 @@ def writeOutData(df, labels, cluster_centers, csv_path, cluster_csv_path):
     
 
     
-def visualizeData(df, cluster_centers, all_cluster_centers):
+def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     fig, axs = plt.subplots(2)
     
     
@@ -108,7 +112,7 @@ def visualizeData(df, cluster_centers, all_cluster_centers):
     axs[0].scatter(only_inactive_users['x'], only_inactive_users['y'], c='gray')
 
     axs[0].scatter(
-        cluster_centers[:, 0], cluster_centers[:, 1],
+        cluster_centers[:num_centers, 0], cluster_centers[:num_centers, 1],
         s=250, marker='*',
         c='red', edgecolor='black',
         label='centroids'
@@ -122,7 +126,7 @@ def visualizeData(df, cluster_centers, all_cluster_centers):
         axs[1].scatter(clustered_data['x'], clustered_data['y'], color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
 
     axs[1].scatter(
-        all_cluster_centers[:, 0], all_cluster_centers[:, 1],
+        all_cluster_centers[:num_centers, 0], all_cluster_centers[:num_centers, 1],
         s=250, marker='*',
         c='red', edgecolor='black',
         label='centroids'
@@ -140,10 +144,10 @@ def main():
     cluster_csv_path = "Clusters.csv"
     # clear_zeros = input("See all data? (y/n): ")
     
-    df, InactiveUsers, active_users, labels, cluster_centers, all_labels, all_cluster_centers = readInData(csv_path)
+    df, InactiveUsers, active_users, labels, cluster_centers, all_labels, all_cluster_centers, num_centers = readInData(csv_path)
     
     writeOutData(df, all_labels, cluster_centers, csv_path, cluster_csv_path)
     
-    visualizeData(df, cluster_centers, all_cluster_centers)
+    visualizeData(df, cluster_centers, all_cluster_centers, num_centers)
 
 __init__ = main()
