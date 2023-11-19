@@ -98,11 +98,12 @@ def writeOutData(df, labels, cluster_centers, db):
         })
         iterator += 1
         
-    # for i in range(len(df_cluster_centers)):
-    #     db.collection('VendingLocations').document(f"machine{i+1}").update({
-    #         'X': df_cluster_centers['x'][i],
-    #         'Y': df_cluster_centers['x'][i]
-    #     })
+    for i in range(len(df_cluster_centers)):
+        key = "Machine" + str(i+1)
+        db.collection('VendingLocations').document(key).update({
+            'x': df_cluster_centers['x'][i],
+            'y': df_cluster_centers['y'][i]
+        })
 
     
 def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
