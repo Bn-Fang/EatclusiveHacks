@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Circles on Canvas</title>
+        <style>
+            body {
+                background-image: url('your-image.jpg');
+                background-repeat: no-repeat;
+                background-attachment: fixed;  
+                background-size: cover;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="circle-canvas" width="800" height="600"></canvas>
+        <script>
+            let canvas = document.getElementById("circle-canvas");
+            let ctx = canvas.getContext("2d");
+
+            let _clear_screen = function() {
+                ctx.fillStyle = "white";
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+            }
+
+            let _draw_circle = function(x, y, radius) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2*Math.PI);
+                ctx.stroke();
+            }
+
+            let _draw_filled_circle = function(x, y, radius) {
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2*Math.PI);
+                ctx.fillStyle = "gray";
+                ctx.fill();
+            }
+
+            let _make_new_circle = function(x,y,radius) {
+                _clear_screen();
+                _draw_filled_circle(x, y, radius);
+            }
+
+            let _on_click = function(e) {
+                if (e.button == 0) {
+                    _make_new_circle(e.offsetX,e.offsetY, Math.floor(Math.random() * 30) + 40);
+                }
+            };
+
+            document.getElementById("circle-canvas").addEventListener("mousedown", _on_click);
+        </script>
+    </body>
+</html>
