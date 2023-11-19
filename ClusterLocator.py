@@ -107,8 +107,14 @@ def writeOutData(df, labels, cluster_centers, db):
 
     
 def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
-    fig, axs = plt.subplots(2)
     
+    fig, axs = plt.subplots(2)
+    y_scaling = -605
+    x_scaling = -363
+    y_offset = 673.4
+    x_offset = 375.6
+    
+    fig.set_size_inches(9, 7)
     
     # Create scatter plot for visualization
     only_active_users = df[df['vote'] != 0]
@@ -118,13 +124,14 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     # For each unique clusterId, create a separate scatter plot with a label
     for clusterId in only_active_users['ClusterId'].unique():
         clustered_data = only_active_users[only_active_users['ClusterId']==clusterId]
-        axs[0].scatter(clustered_data['x'], clustered_data['y'], color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
+        axs[0].scatter(clustered_data['y']*y_scaling + y_offset, clustered_data['x']*x_scaling + x_offset, color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
 
     
-    axs[0].scatter(only_inactive_users['x'], only_inactive_users['y'], c='gray')
+    axs[0].scatter(only_inactive_users['y']*y_scaling+ y_offset, only_inactive_users['x']*x_scaling+ x_offset, c='gray')
 
     axs[0].scatter(
-        cluster_centers[:num_centers, 0], cluster_centers[:num_centers, 1],
+        cluster_centers[:num_centers, 1]*y_scaling+ y_offset,
+        cluster_centers[:num_centers, 0]*x_scaling + x_offset,
         s=250, marker='*',
         c='red', edgecolor='black',
         label='centroids'
@@ -132,15 +139,16 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     axs[0].set_title('Active Clusters')
     img = plt.imread("map.png")
     axs[0].imshow(img)
-    axs[0].legend()
+    axs[0].legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
 
 
     for clusterId in df['ClusterId'].unique():
         clustered_data = df[df['ClusterId']==clusterId]
-        axs[1].scatter(clustered_data['x'], clustered_data['y'], color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
+        axs[1].scatter(clustered_data['y']*y_scaling + y_offset, clustered_data['x']*x_scaling + x_offset, color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
 
     axs[1].scatter(
-        all_cluster_centers[:num_centers, 0], all_cluster_centers[:num_centers, 1],
+        cluster_centers[:num_centers, 1]*y_scaling+ y_offset,
+        cluster_centers[:num_centers, 0]*x_scaling + x_offset,
         s=250, marker='*',
         c='red', edgecolor='black',
         label='centroids'
@@ -148,12 +156,15 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     axs[1].set_title('All Clusters')   
     img = plt.imread("map.png")
     axs[1].imshow(img) 
-    axs[1].legend()
+    axs[1].legend(bbox_to_anchor=(1.02, 1), loc='upper left', borderaxespad=0)
     
     # Add labels for whole figure
     fig.suptitle('Cluster Visualization')
 
     plt.savefig("ClusterVisualization.png")
+    
+    #comment out the following line if you don't want to see the plot
+    # plt.show()
 
 def main():
     csv_path = "VotingSampleData.csv"
