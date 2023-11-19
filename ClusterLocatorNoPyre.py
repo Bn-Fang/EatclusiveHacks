@@ -9,8 +9,6 @@ from collections import Counter
 # from firebase_admin import credentials, firestore
 
 
-
-
 def readInData(csv_path):
     df = pd.read_csv(csv_path)
     InactiveUsers = df[df['Vote'] == 0]
