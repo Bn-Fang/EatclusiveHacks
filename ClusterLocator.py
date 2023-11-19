@@ -17,8 +17,8 @@ def readInData(db):
     df = pd.DataFrame(users_)
     print(df)
     
-    InactiveUsers = df[df['Vote'] == 0]
-    active_users = df[df['Vote'] != 0]
+    InactiveUsers = df[df['vote'] == 0]
+    active_users = df[df['vote'] != 0]
     cluster_center = df[df['ClusterId'] == 0]
     labels, cluster_centers, num_centers = FindMeans(active_users)
     all_labels, all_cluster_centers, unneeded = FindMeans(df)
@@ -26,8 +26,8 @@ def readInData(db):
 
 
 def FindMeans(df):  
-    x_values = df['X']
-    y_values = df['Y']
+    x_values = df['x']
+    y_values = df['y']
     # Create a list of tuples where each tuple is a pair of X,Y
     points = np.array(list(zip(x_values, y_values)))
 
@@ -35,7 +35,7 @@ def FindMeans(df):
     bandwidth = estimate_bandwidth(points, quantile=0.2, n_samples=100)
 
     # Create Mean Shift Model
-    ms = MeanShift(bandwidth=bandwidth, bin_seeding=True)
+    ms = MeanShift(bandwidth=.5, bin_seeding=True)
     ms.fit(points)
     labels = ms.labels_
     cluster_centers = ms.cluster_centers_
@@ -66,11 +66,11 @@ def FindMeans(df):
 
 
 
-def writeOutData(df, labels, cluster_centers, csv_path, cluster_csv_path):
+def writeOutData(df, labels, cluster_centers, db):
     # Add a column with cluster id
     
     df['ClusterId'] = labels + 1  
-    votes = df['Vote']
+    votes = df['vote']
     
     # Create vote dictionary
     cluster_vote_dict = {}
@@ -84,22 +84,25 @@ def writeOutData(df, labels, cluster_centers, csv_path, cluster_csv_path):
     #     }
     #     db.collection('users').document(str(Id)).update(update_data)
     
-    df_cluster_centers = pd.DataFrame(cluster_centers, columns=['X', 'Y'])
+    df_cluster_centers = pd.DataFrame(cluster_centers, columns=['x', 'y'])
     
     print(cluster_vote_dict)
     
     users = db.collection('users').get()
+    iterator = 0
     for user in users:
         key = user.id
+        clusterIDtag = int(df['ClusterId'][iterator])
         db.collection('users').document(key).update({
-            'ClusterId': df['ClusterId'][key],
+            'ClusterId': clusterIDtag,
         })
+        iterator += 1
         
-    for i in range(len(df_cluster_centers)):
-        db.collection('VendingLocations').document(f"machine{i+1}").update({
-            'X': df_cluster_centers['X'][i],
-            'Y': df_cluster_centers['Y'][i]
-        })
+    # for i in range(len(df_cluster_centers)):
+    #     db.collection('VendingLocations').document(f"machine{i+1}").update({
+    #         'X': df_cluster_centers['x'][i],
+    #         'Y': df_cluster_centers['x'][i]
+    #     })
 
     
 def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
@@ -107,8 +110,8 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     
     
     # Create scatter plot for visualization
-    only_active_users = df[df['Vote'] != 0]
-    only_inactive_users = df[df['Vote'] == 0]
+    only_active_users = df[df['vote'] != 0]
+    only_inactive_users = df[df['vote'] == 0]
     colors=['r', 'g', 'b', 'y', 'c', 'm']
 
     # For each unique clusterId, create a separate scatter plot with a label
@@ -126,6 +129,8 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
         label='centroids'
     )
     axs[0].set_title('Active Clusters')
+    img = plt.imread("map.png")
+    axs[0].imshow(img)
     axs[0].legend()
 
 
@@ -139,7 +144,9 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
         c='red', edgecolor='black',
         label='centroids'
     )
-    axs[1].set_title('All Clusters')    
+    axs[1].set_title('All Clusters')   
+    img = plt.imread("map.png")
+    axs[1].imshow(img) 
     axs[1].legend()
     
     # Add labels for whole figure
