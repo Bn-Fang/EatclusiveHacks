@@ -14,11 +14,6 @@ firebase_admin.initialize_app(cred, {
 })
 
 db = firestore.client()
-# example of how to read data
-# result = db.collection('people').document("person1").get()
-# if result.exists:
-#     print(result.to_dict())
-    
 
 # Create an Event for notifying main thread.
 callback_done = threading.Event()
@@ -38,8 +33,5 @@ while True:
     print("Waiting for callback...")
     callback_done.wait()
     print("Callback received!")
-    # docs = db.collection('users').get()
-    # for doc in docs:
-    #     print(doc.to_dict())
     os.system("/usr/local/bin/python3 /Users/benfang/Documents/Mhacks16/EatclusiveHacks/ClusterLocator.py")
     callback_done.clear()

@@ -153,7 +153,7 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     # Add labels for whole figure
     fig.suptitle('Cluster Visualization')
 
-    plt.show()
+    plt.savefig("ClusterVisualization.png")
 
 def main():
     csv_path = "VotingSampleData.csv"
