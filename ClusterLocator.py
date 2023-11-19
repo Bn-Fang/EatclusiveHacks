@@ -8,8 +8,12 @@ from collections import Counter
 
 
 
+
+
 def readInData(csv_path):
     df = pd.read_csv(csv_path)
+    
+    
     InactiveUsers = df[df['Vote'] == 0]
     active_users = df[df['Vote'] != 0]
     cluster_center = df[df['ClusterId'] == 0]
