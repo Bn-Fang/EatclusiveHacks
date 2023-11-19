@@ -9,7 +9,7 @@ num_samples = 100
 X, y = make_blobs(
    n_samples=num_samples, n_features=2,
    centers=5, cluster_std=0.5, # 
-   shuffle=True, random_state=0
+   shuffle=True, random_state=1
 )
 
 # Generate User IDs and random votes

@@ -5,14 +5,15 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import MeanShift, estimate_bandwidth
 from collections import Counter
 
-import firebase_admin
-from firebase_admin import credentials, firestore
+# import firebase_admin
+# from firebase_admin import credentials, firestore
 
 
 
 
 def readInData(csv_path):
     df = pd.read_csv(csv_path)
+    
     
     
     InactiveUsers = df[df['Vote'] == 0]
@@ -60,9 +61,9 @@ def FindMeans(df):
 def writeOutData(df, labels, cluster_centers, csv_path, cluster_csv_path):
     # Add a column with cluster id
     
-    cred = credentials.Certificate("eatclusive-plant-data-firebase-adminsdk-3xb6s-cb1f31e924.json")
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
+    # cred = credentials.Certificate("eatclusive-plant-data-firebase-adminsdk-3xb6s-cb1f31e924.json")
+    # firebase_admin.initialize_app(cred)
+    # db = firestore.client()
     
     df['ClusterId'] = labels + 1  
     votes = df['Vote']
@@ -73,11 +74,11 @@ def writeOutData(df, labels, cluster_centers, csv_path, cluster_csv_path):
         cluster_votes = votes[labels == cluster_id]
         cluster_vote_dict[cluster_id] = dict(Counter(cluster_votes))
         
-    for Id in df['User_ID']:
-        update_data = {
-            'ClusterId': df['ClusterId'][Id],
-        }
-        db.collection('users').document(str(Id)).update(update_data)
+    # for Id in df['User_ID']:
+    #     update_data = {
+    #         'ClusterId': df['ClusterId'][Id],
+    #     }
+    #     db.collection('users').document(str(Id)).update(update_data)
         
         
     df.to_csv(csv_path, index=False)
