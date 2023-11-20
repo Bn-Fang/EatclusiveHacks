@@ -32,10 +32,10 @@ def FindMeans(df):
     points = np.array(list(zip(x_values, y_values)))
 
     # Estimate bandwidth for mean shift
-    bandwidth = estimate_bandwidth(points, quantile=0.18, n_samples=100)
+    bandwidth = estimate_bandwidth(points, quantile=0.2, n_samples=100)
 
     # Create Mean Shift Model
-    ms = MeanShift(bandwidth=.2, bin_seeding=True)
+    ms = MeanShift(bandwidth=.29, bin_seeding=True)
     ms.fit(points)
     labels = ms.labels_
     cluster_centers = ms.cluster_centers_
@@ -132,8 +132,8 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
     axs[0].scatter(
         cluster_centers[:num_centers, 1]*y_scaling+ y_offset,
         cluster_centers[:num_centers, 0]*x_scaling + x_offset,
-        s=20, marker='*',
-        c='red', edgecolor='red',
+        s=10, marker='*',
+        c='red', edgecolor='black',
         label='centroids'
     )
     axs[0].set_title('Active Clusters')
@@ -147,10 +147,10 @@ def visualizeData(df, cluster_centers, all_cluster_centers, num_centers):
         axs[1].scatter(clustered_data['y']*y_scaling + y_offset, clustered_data['x']*x_scaling + x_offset, color=colors[clusterId % len(colors)], label= f"Cluster {clusterId}")
 
     axs[1].scatter(
-        cluster_centers[:, 1]*y_scaling+ y_offset,
-        cluster_centers[:, 0]*x_scaling + x_offset,
-        s=20, marker='*',
-        c='red', edgecolor='red',
+        cluster_centers[:num_centers, 1]*y_scaling+ y_offset,
+        cluster_centers[:num_centers, 0]*x_scaling + x_offset,
+        s=10, marker='*',
+        c='red', edgecolor='black',
         label='centroids'
     )
     axs[1].set_title('All Clusters')   
